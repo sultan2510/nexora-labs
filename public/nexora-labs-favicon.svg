@@ -1,0 +1,8 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>Nexora Labs favicon</title>
+  <desc>Red N monogram on a rounded black square</desc>
+  <rect width="200" height="200" rx="36" fill="#0A0A0A"/>
+  <polygon points="35,35 70,35 70,165 35,165" fill="#E11D2E"/>
+  <polygon points="130,35 165,35 165,165 130,165" fill="#E11D2E"/>
+  <polygon points="35,35 70,35 165,165 130,165" fill="#E11D2E"/>
+</svg>

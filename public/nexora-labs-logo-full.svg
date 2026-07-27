@@ -1,0 +1,9 @@
+<svg width="680" height="220" viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>Nexora Labs</title>
+  <desc>Angular red N monogram beside the NEXORA LABS wordmark</desc>
+  <polygon points="40,40 80,40 80,180 40,180" fill="#E11D2E"/>
+  <polygon points="160,40 200,40 200,180 160,180" fill="#E11D2E"/>
+  <polygon points="40,40 80,40 200,180 160,180" fill="#E11D2E"/>
+  <text x="240" y="122" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="700" fill="#FFFFFF" letter-spacing="2">NEXORA</text>
+  <text x="242" y="160" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="500" fill="#E11D2E" letter-spacing="8">LABS</text>
+</svg>
