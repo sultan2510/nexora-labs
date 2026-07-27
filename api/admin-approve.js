@@ -43,7 +43,8 @@ export default async function handler(req, res) {
 
   // --- action === "select" ---
   try {
-    // 1. Create the auth user (passwordless — they log in via magic link)
+    // 1. Create the auth user with no password yet — they'll set one via
+    // the one-time link generated in step 6 below.
     const { data: authUser, error: authErr } = await supabaseAdmin.auth.admin.createUser({
       email: applicant.email,
       email_confirm: true,
@@ -86,7 +87,7 @@ export default async function handler(req, res) {
     // This is a password-based account (not magic-link), so this link is
     // only ever needed once, right now — after this, they log in with
     // email + password and no further emails are sent per login.
-    const siteUrl = process.env.SITE_URL || "https://nexoralabs.com";
+    const siteUrl = process.env.SITE_URL || "https://nexoralabs.club";
     const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email: applicant.email,
@@ -96,10 +97,50 @@ export default async function handler(req, res) {
     const setPasswordLink = linkData.properties.action_link;
 
     // 7. Email it via Resend
+    const displayDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    const domainName = escapeHtml(applicant.domain);
+    const safeName = escapeHtml(applicant.name);
+    const safeInternId = escapeHtml(internId);
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #111; max-width: 560px; margin: 0 auto;">
+        <p>Hi ${safeName},</p>
+        <p>Congratulations — you've been selected for the <b>${domainName}</b> track at Nexora Labs, for the cohort starting August 3, 2026. Your offer letter is attached to this email as a PDF.</p>
+        <p><b>Date:</b> ${displayDate}<br/>
+        <b>Track:</b> ${domainName}<br/>
+        <b>Intern ID:</b> ${safeInternId}</p>
+        <p><a href="${setPasswordLink}" style="color:#E11D2E; font-weight:bold;">Click here to set your password</a> and access your dashboard. This link is one-time use — after setting your password, log in anytime at nexoralabs.club/login with your email and password.</p>
+        <p>Next, please join our official WhatsApp group for your track to get further instructions and connect with your cohort:<br/>
+        <a href="${whatsappLink}" style="color:#E11D2E; font-weight:bold;">${whatsappLink}</a></p>
+        <p>We look forward to having you build with us.</p>
+        <p>Warm regards,<br/>Malik Sultan Ali, Founder &amp; Ahmed Shaheer, CEO<br/>Nexora Labs</p>
+      </div>
+    `;
+
+    const text = `Hi ${applicant.name},
+
+Congratulations — you've been selected for the ${applicant.domain} track at Nexora Labs, for the cohort starting August 3, 2026. Your offer letter is attached to this email as a PDF.
+
+Date: ${displayDate}
+Track: ${applicant.domain}
+Intern ID: ${internId}
+
+Set your password here (one-time link): ${setPasswordLink}
+After that, log in anytime at nexoralabs.club/login with your email and password.
+
+Join our WhatsApp group for your track: ${whatsappLink}
+
+We look forward to having you build with us.
+
+Warm regards,
+Malik Sultan Ali, Founder & Ahmed Shaheer, CEO
+Nexora Labs`;
+
     await sendEmail({
       to: applicant.email,
       subject: `Offer of Internship - ${applicant.domain} Track at Nexora Labs`,
-      html: `<p>Hi ${escapeHtml(applicant.name)},</p><p>Congratulations — your offer letter is attached. Your Intern ID is <b>${escapeHtml(internId)}</b>.</p><p><a href="${setPasswordLink}">Click here to set your password</a> and access your dashboard. This link is one-time use — after setting your password, log in anytime at nexoralabs.com/login with your email and password.</p>`,
+      html,
+      text,
       attachments: [
         { filename: "Nexora-Labs-Offer-Letter.pdf", content: Buffer.from(pdfBytes).toString("base64") },
       ],

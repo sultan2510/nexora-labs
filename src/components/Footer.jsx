@@ -8,7 +8,7 @@ export default function Footer() {
         <p className="text-sm text-muted text-center">
           Nexora Labs — build production software, grow as an engineer.
         </p>
-        <div className="text-sm text-muted">team@nexoralabs.com</div>
+        <div className="text-sm text-muted">team@nexoralabs.club</div>
       </div>
     </footer>
   );

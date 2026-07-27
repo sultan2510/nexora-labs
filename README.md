@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Nexora Labs — Internship Platform
 
 A working scaffold for the full internship pipeline: public site → application →
@@ -74,3 +75,6 @@ supabase/
   schema.sql         full DB schema + RLS policies + storage buckets
   seed_full.sql       full task + quiz seed data — all 9 domains
 ```
+=======
+# nexora-labs
+>>>>>>> e74e866a89b5cbe0bae4a20e5d7681a7d3810f32

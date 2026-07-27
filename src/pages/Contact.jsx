@@ -8,7 +8,7 @@ export default function Contact() {
     e.preventDefault();
     // Simplest reliable option for an internship-scale site: mailto.
     // Swap for a Resend-backed /api/contact route later if you want it logged server-side.
-    window.location.href = `mailto:team@nexoralabs.com?subject=${encodeURIComponent(
+    window.location.href = `mailto:team@nexoralabs.club?subject=${encodeURIComponent(
       "Message from " + form.name
     )}&body=${encodeURIComponent(form.message + "\n\n" + form.email)}`;
     setSent(true);
@@ -20,7 +20,7 @@ export default function Contact() {
         <h1 className="text-4xl font-extrabold mb-6">Contact</h1>
         <div className="card p-5">
           <p className="text-xs text-muted mb-1">EMAIL</p>
-          <p className="font-semibold">team@nexoralabs.com</p>
+          <p className="font-semibold">team@nexoralabs.club</p>
         </div>
         <div className="card p-5">
           <p className="text-xs text-muted mb-1">RESPONSE TIME</p>

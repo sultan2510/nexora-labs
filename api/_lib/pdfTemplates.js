@@ -126,8 +126,8 @@ export async function buildOfferLetterPdf({ name, domain, internId, whatsappLink
   page.drawText("NEXORA", { x: 100, y: H - 55, size: 15, font: helvBold, color: WHITE });
   page.drawText("LABS", { x: 101, y: H - 68, size: 7, font: helvBold, color: RED });
 
-  page.drawText("nexoralabs.com", { x: W - 50 - helv.widthOfTextAtSize("nexoralabs.com", 9), y: H - 60, size: 9, font: helv, color: GRAY });
-  page.drawText("team@nexoralabs.com", { x: W - 50 - helv.widthOfTextAtSize("team@nexoralabs.com", 9), y: H - 74, size: 9, font: helv, color: GRAY });
+  page.drawText("nexoralabs.club", { x: W - 50 - helv.widthOfTextAtSize("nexoralabs.club", 9), y: H - 60, size: 9, font: helv, color: GRAY });
+  page.drawText("team@nexoralabs.club", { x: W - 50 - helv.widthOfTextAtSize("team@nexoralabs.club", 9), y: H - 74, size: 9, font: helv, color: GRAY });
 
   let y = H - 150;
   page.drawText(`Date: ${date}`, { x: 50, y, size: 10, font: helv, color: GRAY });
@@ -174,7 +174,7 @@ export async function buildOfferLetterPdf({ name, domain, internId, whatsappLink
   page.drawText("CEO, Nexora Labs", { x: 320, y: y - 30, size: 9.5, font: helv, color: RED });
 
   page.drawLine({ start: { x: 0, y: 40 }, end: { x: W, y: 40 }, thickness: 1, color: RED });
-  const footer = "Nexora Labs  -  team@nexoralabs.com  -  nexoralabs.com";
+  const footer = "Nexora Labs  -  team@nexoralabs.club  -  nexoralabs.club";
   drawCentered(page, footer, helv, 8, 26, W, GRAY);
 
   return doc.save();
