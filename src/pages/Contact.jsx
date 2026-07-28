@@ -2,16 +2,27 @@ import { useState } from "react";
 
 export default function Contact() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
-  const [sent, setSent] = useState(false);
+  const [status, setStatus] = useState("idle"); // idle | sending | sent | error
+  const [errorMsg, setErrorMsg] = useState("");
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    // Simplest reliable option for an internship-scale site: mailto.
-    // Swap for a Resend-backed /api/contact route later if you want it logged server-side.
-    window.location.href = `mailto:team@nexoralabs.club?subject=${encodeURIComponent(
-      "Message from " + form.name
-    )}&body=${encodeURIComponent(form.message + "\n\n" + form.email)}`;
-    setSent(true);
+    setStatus("sending");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      setStatus("sent");
+      setForm({ name: "", email: "", message: "" });
+    } catch (err) {
+      setStatus("error");
+      setErrorMsg(err.message);
+    }
   }
 
   return (
@@ -58,8 +69,11 @@ export default function Contact() {
             onChange={(e) => setForm({ ...form, message: e.target.value })}
           />
         </div>
-        <button className="btn-primary w-full">Send message</button>
-        {sent && <p className="text-sm text-red">Opening your email client…</p>}
+        <button className="btn-primary w-full" disabled={status === "sending"}>
+          {status === "sending" ? "Sending…" : "Send message"}
+        </button>
+        {status === "sent" && <p className="text-sm text-red">Message sent — we'll get back to you soon.</p>}
+        {status === "error" && <p className="text-sm text-red">{errorMsg}</p>}
       </form>
     </div>
   );

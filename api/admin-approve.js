@@ -43,29 +43,63 @@ export default async function handler(req, res) {
 
   // --- action === "select" ---
   try {
-    // 1. Create the auth user with no password yet — they'll set one via
-    // the one-time link generated in step 6 below.
-    const { data: authUser, error: authErr } = await supabaseAdmin.auth.admin.createUser({
-      email: applicant.email,
-      email_confirm: true,
-    });
-    if (authErr) throw authErr;
+    // 0. If this applicant already has an intern row (e.g. a previous
+    // attempt got partway through before failing), reuse it instead of
+    // trying to create everything from scratch again.
+    const { data: existingIntern } = await supabaseAdmin
+      .from("interns")
+      .select("*")
+      .eq("applicant_id", applicant.id)
+      .maybeSingle();
 
-    // 2. Generate a sequential Intern ID: NXL-2608-0001
-    const { count } = await supabaseAdmin.from("interns").select("*", { count: "exact", head: true });
-    const seq = String((count || 0) + 1).padStart(4, "0");
-    const internId = `NXL-2608-${seq}`;
+    let authUserId, internId;
 
-    // 3. Create the intern row
-    const { error: internErr } = await supabaseAdmin.from("interns").insert({
-      id: authUser.user.id,
-      applicant_id: applicant.id,
-      intern_id: internId,
-      name: applicant.name,
-      email: applicant.email,
-      domain: applicant.domain,
-    });
-    if (internErr) throw internErr;
+    if (existingIntern) {
+      authUserId = existingIntern.id;
+      internId = existingIntern.intern_id;
+    } else {
+      // 1. Create the auth user with no password yet — they'll set one via
+      // the one-time link generated in step 6 below.
+      const { data: authUser, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+        email: applicant.email,
+        email_confirm: true,
+      });
+
+      if (authErr) {
+        // Recover instead of failing outright: this happens when a
+        // previous attempt created the login account but failed on a
+        // later step (e.g. building the PDF) before finishing.
+        const alreadyExists = /already been registered|already exists/i.test(authErr.message || "");
+        if (!alreadyExists) throw authErr;
+
+        const { data: listData, error: listErr } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        if (listErr) throw listErr;
+        const existingUser = listData.users.find((u) => u.email === applicant.email);
+        if (!existingUser) throw new Error("Account already registered but could not be located to recover it.");
+        authUserId = existingUser.id;
+      } else {
+        authUserId = authUser.user.id;
+      }
+
+      // 2. Generate a sequential Intern ID: NXL-2608-0001
+      const { count } = await supabaseAdmin.from("interns").select("*", { count: "exact", head: true });
+      const seq = String((count || 0) + 1).padStart(4, "0");
+      internId = `NXL-2608-${seq}`;
+
+      // 3. Create the intern row (upsert so a retry never hits a duplicate-key error)
+      const { error: internErr } = await supabaseAdmin.from("interns").upsert(
+        {
+          id: authUserId,
+          applicant_id: applicant.id,
+          intern_id: internId,
+          name: applicant.name,
+          email: applicant.email,
+          domain: applicant.domain,
+        },
+        { onConflict: "id" }
+      );
+      if (internErr) throw internErr;
+    }
 
     // 4. Bump the domain's filled_count
     await supabaseAdmin.rpc("increment_filled_count", { domain_slug: applicant.domain }).catch(() => {
@@ -154,6 +188,7 @@ Nexora Labs`;
 
     return res.status(200).json({ ok: true, internId });
   } catch (err) {
+    console.error("admin-approve failed for applicant", applicant_id, err);
     return res.status(500).json({ error: err.message || "Failed to select applicant" });
   }
 }

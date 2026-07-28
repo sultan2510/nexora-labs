@@ -25,7 +25,20 @@ export default function Apply() {
     e.preventDefault();
     if (website) return; // bot filled the honeypot — silently drop
     if (!cvFile) {
-      setErrorMsg("Please attach your CV (PDF).");
+      setErrorMsg("Please attach your CV (PDF or Word document).");
+      return;
+    }
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(cvFile.type)) {
+      setErrorMsg("Your CV must be a PDF or Word document (.pdf, .doc, .docx).");
+      return;
+    }
+    if (cvFile.size > 5 * 1024 * 1024) {
+      setErrorMsg("Your CV file is too large — please keep it under 5MB.");
       return;
     }
     setStatus("submitting");
@@ -122,11 +135,11 @@ export default function Apply() {
           </select>
         </div>
         <div>
-          <label className="text-sm font-medium mb-1 block">CV (PDF)</label>
+          <label className="text-sm font-medium mb-1 block">CV (PDF or Word)</label>
           <input
             required
             type="file"
-            accept="application/pdf"
+            accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,.doc,.docx"
             className="input file:mr-4 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-red file:text-white"
             onChange={(e) => setCvFile(e.target.files?.[0] || null)}
           />

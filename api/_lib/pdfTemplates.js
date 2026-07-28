@@ -28,16 +28,21 @@ function drawCentered(page, text, font, size, y, pageWidth, color) {
   page.drawText(text, { x: (pageWidth - width) / 2, y, size, font, color });
 }
 
-// N monogram, drawn as three SVG-path quads, matching the approved brand mark.
-function drawLogo(page, x, y, scale) {
-  const paths = [
-    "M40,40 L80,40 L80,180 L40,180 Z",
-    "M160,40 L200,40 L200,180 L160,180 Z",
-    "M40,40 L80,40 L200,180 L160,180 Z",
-  ];
-  for (const d of paths) {
-    page.drawSvgPath(d, { x, y: y + 200 * scale, scale, color: RED });
-  }
+// N monogram — a red square with a bold white "N", built only from
+// drawRectangle/drawText (the most basic, stable pdf-lib primitives).
+function drawLogo(page, x, y, scale, helvBold) {
+  const size = 200 * scale;
+  page.drawRectangle({ x, y, width: size, height: size, color: RED });
+  const letter = "N";
+  const fontSize = size * 0.62;
+  const textWidth = helvBold.widthOfTextAtSize(letter, fontSize);
+  page.drawText(letter, {
+    x: x + (size - textWidth) / 2,
+    y: y + size * 0.22,
+    size: fontSize,
+    font: helvBold,
+    color: WHITE,
+  });
 }
 
 export async function buildCertificatePdf({ name, domain, certCode, issueDate, cohort = "August 2026" }) {
@@ -52,7 +57,7 @@ export async function buildCertificatePdf({ name, domain, certCode, issueDate, c
   page.drawRectangle({ x: 24, y: 24, width: W - 48, height: H - 48, borderColor: RED, borderWidth: 2 });
   page.drawRectangle({ x: 34, y: 34, width: W - 68, height: H - 68, borderColor: GRAY, borderWidth: 0.5 });
 
-  drawLogo(page, W / 2 - 70, H - 150, 0.34);
+  drawLogo(page, W / 2 - 70, H - 150, 0.34, helvBold);
   page.drawText("NEXORA", { x: W / 2 + 10, y: H - 100, size: 22, font: helvBold, color: WHITE });
   page.drawText("LABS", { x: W / 2 + 12, y: H - 118, size: 9, font: helvBold, color: RED });
 
@@ -122,7 +127,7 @@ export async function buildOfferLetterPdf({ name, domain, internId, whatsappLink
   page.drawRectangle({ x: 0, y: H - 110, width: W, height: 110, color: rgb(0.07, 0.07, 0.07) });
   page.drawLine({ start: { x: 0, y: H - 110 }, end: { x: W, y: H - 110 }, thickness: 1.5, color: RED });
 
-  drawLogo(page, 50, H - 80, 0.22);
+  drawLogo(page, 50, H - 80, 0.22, helvBold);
   page.drawText("NEXORA", { x: 100, y: H - 55, size: 15, font: helvBold, color: WHITE });
   page.drawText("LABS", { x: 101, y: H - 68, size: 7, font: helvBold, color: RED });
 
