@@ -115,7 +115,7 @@ export default function Tasks() {
                       )}
 
                       {(!sub || sub.status === "rejected") && (
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <input
                             className="input"
                             placeholder="Link to your submission (repo, deploy, doc…)"

@@ -16,7 +16,8 @@ export default function QuizResults() {
     <div>
       <h1 className="text-2xl font-extrabold mb-6">Quiz results</h1>
       <div className="card overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
           <thead className="bg-surface2 text-muted">
             <tr>
               <th className="text-left p-3">Intern</th>
@@ -44,6 +45,7 @@ export default function QuizResults() {
             ))}
           </tbody>
         </table>
+        </div>
         {rows.length === 0 && <p className="text-muted p-5">No attempts yet.</p>}
       </div>
     </div>
