@@ -101,10 +101,12 @@ export default async function handler(req, res) {
       if (internErr) throw internErr;
     }
 
-    // 4. Bump the domain's filled_count
-    await supabaseAdmin.rpc("increment_filled_count", { domain_slug: applicant.domain }).catch(() => {
-      // Fallback if the RPC function isn't set up — see supabase/schema.sql note below.
-    });
+    // 4. Bump the domain's filled_count (best-effort — don't let this block selection)
+    try {
+      await supabaseAdmin.rpc("increment_filled_count", { domain_slug: applicant.domain });
+    } catch (e) {
+      console.error("increment_filled_count failed (non-fatal):", e);
+    }
 
     // 5. Build the offer letter PDF
     const whatsappLinks = JSON.parse(process.env.WHATSAPP_GROUP_LINKS || "{}");
