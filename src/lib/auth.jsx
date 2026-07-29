@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "./supabase";
 
 const AuthContext = createContext(null);
@@ -8,14 +9,22 @@ export function AuthProvider({ children }) {
   const [intern, setIntern] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
       setSession(sess);
+      // No matter which page Supabase's redirect actually lands the user
+      // on, if this is a password-recovery session, force them to the
+      // set-password page. This makes the flow work even if the Supabase
+      // dashboard's Redirect URL allow-list is misconfigured.
+      if (event === "PASSWORD_RECOVERY") {
+        navigate("/set-password", { replace: true });
+      }
     });
     return () => sub.subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     async function loadProfile() {
