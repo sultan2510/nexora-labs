@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 
 export default function SetPassword() {
   const [ready, setReady] = useState(false);
+  const [expired, setExpired] = useState(false);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
@@ -11,16 +12,31 @@ export default function SetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Supabase's client automatically parses the recovery token from the
-    // URL and fires this event once a temporary session is established.
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
-    });
-    // In case the event already fired before this listener attached.
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
-    return () => sub.subscription.unsubscribe();
+    let cancelled = false;
+
+    // Don't depend on catching one specific auth event — just poll for a
+    // real session for a few seconds. This is what the recovery link
+    // actually produces once Supabase's client finishes parsing the URL,
+    // regardless of exactly which event fires or when.
+    async function waitForSession() {
+      for (let attempt = 0; attempt < 15; attempt++) {
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (data.session) {
+          setReady(true);
+          return;
+        }
+        await new Promise((r) => setTimeout(r, 400));
+      }
+      if (!cancelled) setExpired(true);
+    }
+
+    waitForSession();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => waitForSession());
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   async function handleSubmit(e) {
@@ -41,11 +57,21 @@ export default function SetPassword() {
     else navigate("/dashboard");
   }
 
+  if (expired) {
+    return (
+      <div className="max-w-sm mx-auto px-6 py-24 text-center">
+        <p className="text-red font-semibold mb-2">This link has expired or already been used.</p>
+        <p className="text-muted text-sm">
+          Go to the <a href="/login" className="text-red underline">login page</a> and use "Forgot password?" to get a new one.
+        </p>
+      </div>
+    );
+  }
+
   if (!ready) {
     return (
       <div className="max-w-sm mx-auto px-6 py-24 text-center text-muted">
-        Verifying your link… if this doesn't finish, the link may have expired —
-        request a new one from the login page.
+        Verifying your link…
       </div>
     );
   }
