@@ -82,8 +82,12 @@ export default async function handler(req, res) {
       }
 
       // 2. Generate a sequential Intern ID: NXL-2608-0001
-      const { count } = await supabaseAdmin.from("interns").select("*", { count: "exact", head: true });
-      const seq = String((count || 0) + 1).padStart(4, "0");
+      // Uses a real DB sequence (see supabase/fix_intern_sequence.sql) —
+      // unlike a count-based number, this can never collide even if
+      // intern rows are later deleted.
+      const { data: seqNum, error: seqErr } = await supabaseAdmin.rpc("next_intern_number");
+      if (seqErr) throw seqErr;
+      const seq = String(seqNum).padStart(4, "0");
       internId = `NXL-2608-${seq}`;
 
       // 3. Create the intern row (upsert so a retry never hits a duplicate-key error)
